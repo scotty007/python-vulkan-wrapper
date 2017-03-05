@@ -97,16 +97,25 @@ TYPES_MAP = {
 # ? are replaced by ''
 # $ are replaced by '\n'
 
+HEADER_TEMPLATE = """
+# -*- coding: utf-8 -*-
+\"\"\"
+This wrapper is generated from the Khronos Vulkan XML API Registry.
+The used vk.xml file contains the following copyright/disclaimer:
+?
+{XML_COMMENT}
+\"\"\"
+"""
+
 # Static stuff required for the library to work
 
 IMPORTS_TEMPLATE = """
-# -*- coding: utf-8 -*-
 from ctypes import (c_void_p, c_float, c_uint8, c_uint, c_uint64, c_int, c_size_t, c_char, c_char_p, cast, Structure, Union, POINTER)
 from platform import system
 """
 
 INITIALIZATION_TEMPLATE = """
-# Sysem initialization
+# System initialization
 system_name = system()
 if system_name == 'Windows':
 `from ctypes import WINFUNCTYPE, windll
@@ -354,8 +363,12 @@ def begin_generation():
     s['output'] = open(s['output_file_name'], 'w')
     s['root'] = ElementTree.fromstring(s['xml'].read())
 
+def add_header():
+    s = SHARED
+    s['output'].write(HEADER_TEMPLATE.format(XML_COMMENT=s['root'].find('comment').text.strip()))
+
 def add_imports():
-    SHARED['output'].write(IMPORTS_TEMPLATE)
+    SHARED['output'].write("\n"+IMPORTS_TEMPLATE)
 
 def add_initialization():
     SHARED['output'].write("\n\n"+INITIALIZATION_TEMPLATE+"\n")
@@ -614,6 +627,7 @@ def export():
     prepare_templates()
     load_xml()
     begin_generation()
+    add_header()
     add_imports()
     add_initialization()
     parse_header_version()
